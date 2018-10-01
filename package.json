@@ -1,0 +1,28 @@
+{
+  "name": "VaqMan",
+  "version": "1.0.0",
+  "description": "VaqMan",
+  "main": "server.js",
+  "scripts": {
+    "test": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vaqcoders/vaqman.git"
+  },
+  "keywords": [
+    "pacman",
+    "vaqcoders",
+    "rahs"
+  ],
+  "author": "Vaqcoders",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vaqcoders/vaqman/issues"
+  },
+  "homepage": "https://github.com/vaqcoders/vaqman#readme",
+  "dependencies": {
+    "express": "^4.16.3",
+    "socket.io": "^2.1.1"
+  }
+}
