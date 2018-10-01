@@ -5,6 +5,7 @@ Multiplayer PacMan game for all your friends and family.
 * [Coding Train Agar.io Tutorial](https://www.youtube.com/watch?v=ZjVyKXp9hec)
 * [Agar.io Tutorial Src](https://github.com/CodingTrain/website/tree/master/CodingChallenges/CC_032.2_agario_sockets)
 * [Socket - Get Started](https://socket.io/get-started/chat/)
+* [FS Node Module](https://www.w3schools.com/nodejs/nodejs_filesystem.asp)
 
 ## Plan
 1. Make 1-player PacMan
