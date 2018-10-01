@@ -23,6 +23,7 @@
   "homepage": "https://github.com/vaqcoders/vaqman#readme",
   "dependencies": {
     "express": "^4.16.3",
+    "fs": "0.0.1-security",
     "socket.io": "^2.1.1"
   }
 }
