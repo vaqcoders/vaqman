@@ -43,9 +43,12 @@ function setup() {
 }
 
 function draw() {
+  background(0);
   renderPacmaze();
-  //player.update();
-  //player.render();
+  player.render(width / 28, height / 29, 0,     0);
+  //            ^ x-scl     ^ y-scl      ^ offx ^ offy
+  if (frameCount % 10 == 0) player.update();
+  if (pacmaze[player.pos.y][player.pos.x] == "#") player.bonk();
 }
 
 function renderPacmaze() {
@@ -65,8 +68,8 @@ function renderPacmaze() {
 }
 
 function keyPressed(event) {
-  if (event.key == "ArrowRight") player.update(0);
-  else if (event.key == "ArrowUp") player.update(1);
-  else if (event.key == "ArrowLeft") player.update(3);
-  else if (event.key == "ArrowDown") player.update(4);
+  if (event.key == "ArrowRight") player.update({x: 1, y: 0});
+  else if (event.key == "ArrowUp") player.update({x: 0, y: -1});
+  else if (event.key == "ArrowLeft") player.update({x: -1, y: 0});
+  else if (event.key == "ArrowDown") player.update({x: 0, y: 1});
 }
