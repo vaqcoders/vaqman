@@ -1,17 +1,20 @@
 const socket = io.connect(window.href);
+const zoneShape = [28, 29];
 let player, cnv;
 let changingZones = false;
+let leaderboard;
 let pacmaze = ["###### ############## ######","#....# #.....##.....# #....#","#.#### #####.##.##### ####.#","#@#### #####.##.##### ####@#","#.#### #####.##.##### ####.#","#..........................#","#.####.##.########.##.####.#","#.####.##.########.##.####.#","#......##....##....##......#","######.##### ## #####.######","     #.##### ## #####.#     ","     #.##    ##    ##.#     ","######.## ######## ##.######","      .   #      #   .      ","######.## #      # ##.######","     #.## #      # ##.#     ","     #.## ######## ##.#     ","     #.##          ##.#     ","     #.## ######## ##.#     ","######.## ######## ##.######","#......##....##....##......#","#.####.##.########.##.####.#","#.####.##.########.##.####.#","#..........................#","#.#### #####.##.##### ####.#","#@#### #####.##.##### ####@#","#.#### #####.##.##### ####.#","#....# #.....##.....# #....#","###### ############## ######"];
 
 function setup() {
   cnv = createCanvas(window.innerHeight * 0.95, window.innerHeight * 0.95);
   cnv.parent("canvas-container");
 
+  leaderboard = new Leaderboard("leaderboard-container");
+
   Ply.dialog("prompt", {
     title: "Choose a Screen Name",
     form: {name: "Ethan, Jason, etc..."}
   }).done(ui => {
-    console.log(ui)
     player = new Pacman({
       name: ui.data.name,
       discriminator: Math.floor(Math.random() * 9000 + 1000),
@@ -27,10 +30,13 @@ function draw() {
   if (player && !changingZones) {
     if (frameCount % 6 == 0) {
 
-      if (player.pos.x < 0 || player.pos.x > 28 || player.pos.y < 0 || player.pos.y > 29) {
+      if (player.pos.x <= 0 || player.pos.x >= zoneShape[0] - 1 || player.pos.y <= 0 || player.pos.y >= zoneShape[1] - 1) {
+
         socket.emit("zone changed", player);
         changingZones = true;
+
       } else {
+
         background(0);
         renderPacmaze();
 
@@ -43,10 +49,10 @@ function draw() {
           const tempx = player.pos.x * 1, tempy = player.pos.y * 1;
           player.eat();
         }
+
+        controls();
       }
     }
-
-    controls();
   }
 }
 
@@ -56,23 +62,32 @@ function windowResized() {
 
 // SOCKET EVENTS
 socket.on("maze updated", data => {
-  if (player.zone == data.zone)
-    injectPacmaze(data.sym, data.x, data.y, false);
+  try {
+    if (player.zone == data.zone)
+      injectPacmaze(data.sym, data.x, data.y, false);
+  } catch(err) {
+    console.error("Maze cannot be updated while warping between zones.")
+  }
+});
+
+socket.on("leaderboard updated", data => {
+  //leaderboard.update(data);
 });
 
 socket.on("zone changed", data => {
   if (player.discriminator == data.discriminator) {
+    console.log(`currently in zone #${data.zoneIndex}`);
     pacmaze = data.zone;
-    player.zone = data.zone;
-    player.pos.x = data.x;
-    player.pos.y = data.y;
+    player.zone = data.zoneIndex;
+    player.pos.x = player.ppos.x = data.pos.x;
+    player.pos.y = player.ppos.y = data.pos.y;
     changingZones = false;
   }
 })
 
 // HELPER FUNCTIONS
 function renderPacmaze() {
-  const w = width / 28, h = height / 29;
+  const w = width / zoneShape[0], h = height / zoneShape[1];
   pacmaze.forEach((row, i) => row.split("").forEach((cell, j) => {
     if (cell == "#") {
       fill(0, 0, 255);
@@ -109,8 +124,13 @@ function controls() {
                    keyIsDown(UP_ARROW) ? {x: 0, y: -1} :
                    keyIsDown(LEFT_ARROW) ? {x: -1, y: 0} :
                    keyIsDown(DOWN_ARROW) ? {x: 0, y: 1} : null;
-  if (gimmeVel) {
-    const nextCell = pacmaze[player.pos.y + gimmeVel.y][player.pos.x + gimmeVel.x];
-    if (nextCell == "." || nextCell == "@" || nextCell == " ") player.update(gimmeVel);
+  try {
+    if (gimmeVel) {
+      const nextCell = pacmaze[player.pos.y + gimmeVel.y][player.pos.x + gimmeVel.x];
+      if (nextCell == "." || nextCell == "@" || nextCell == " ") player.update(gimmeVel);
+    }
+  } catch(err) {
+    console.error("Velocity cannot be changed while warping between zones.");
   }
+
 }

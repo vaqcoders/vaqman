@@ -15,25 +15,30 @@ let players = {};
 let topTen = [];
 let zones = [];
 const zoneShape = [28, 29];
-const zonesShape = [10, 3];
+const zonesShape = [6, 6];
 
 for (let i = 0; i < zonesShape[0] * zonesShape[1]; i++)
-  zones.push(Object.values(pacmaze_boilerplate))
+  zones.push(Object.values(pacmaze_boilerplate));
 
 io.sockets.on("connection", socket => {
 
   console.log("We have a new client: " + socket.id);
 
   socket.on("start", data => {
-    console.log(`${data.name} has joined`);
     players[data.discriminator] = data;
+    players[data.discriminator]["socket"] = socket.id;
+    console.log(`${data.name} has joined`);
     console.log(`current number of players: ${Object.values(players).length}`)
   });
 
   socket.on("score updated", data => {
     console.log(`${data.name} has a score of ${data.points}`);
+    players[data.discriminator].points = data.points;
     topTen = createLeaderboard();
-    io.emit("score updated", topTen);
+    io.emit("leaderboard updated", {
+      players: Object.values(players).length,
+      topTen: topTen
+    });
   });
 
   socket.on("position updated", data => {
@@ -53,36 +58,14 @@ io.sockets.on("connection", socket => {
   });
 
   socket.on("zone changed", data => {
-    const z = data.zone, // current zone
-          l = zones.length - 1, // final zone
-          y = Math.min(zonesShape[1], l); // height of zone shape
-
-    // baseline = previous zone that % y == 0
-    let baseline = 0;
-    for (let i = 1; i < y; i++)
-      if ((z - (y - i)) % y == 0) baseline = (z - (y - i));
-
-    let gimmeZone, gimmePos, gimmeVel;
-
-    if (data.pos.x <= 0) {
-      // choose leftward zone
-      gimmeZone = z - y; // baseline - y + (z % y);
-    } else if (data.pos.x >= zoneShape[0]) {
-      // choose rightward zone
-      gimmeZone = z + y;
-    } else if (data.pos.y <= 0) {
-      // choose upwards zone 6 | 21
-      gimmeZone = (z - 1 < baseline) ? (baseline + (y - 1)) : (z - 1);
-    } else if (data.pos.y >= zoneShape[1]) {
-      // choose downwards zone 6 | 21
-      gimmeZone = (z + 1 > baseline + (y - 1)) ? baseline : z + 1;
-    }
+    const response = findNextZone(data);
+    console.log(`${data.name} from ${data.zone} to ${response.zoneIndex}`);
     io.emit("zone changed", {
       discriminator: data.discriminator,
-      zone: zones[gimmeZone],
-      zoneIndex: gimmeZone,
-      pos: gimmePos,
-      vel: gimmeVel
+      zone: zones[response.zoneIndex],
+      zoneIndex: response.zoneIndex,
+      pos: response.pos,
+      vel: response.vel
     });
   });
 
@@ -92,7 +75,8 @@ io.sockets.on("connection", socket => {
   });
 
   socket.on("disconnect", data => {
-
+    console.log(`${data.name} has left.`);
+    delete players[data.discriminator];
   });
 
 });
@@ -100,7 +84,7 @@ io.sockets.on("connection", socket => {
 // HELPER FUNCTIONS
 function createLeaderboard() {
   return Object.values(players)
-    .sort((a, b) => a.points - b.points)
+    .sort((a, b) => b.points - a.points)
     .slice(0, 9);
 }
 
@@ -116,4 +100,54 @@ function findBlankZone() {
     acc.delete(cur.zone);
     return acc;
   }, new Set(Array.apply(null, {length: zones.length}).map(Number.call, Number)))[0];
+}
+
+function findNextZone(data) {
+  const z = data.zone, // current zone
+        l = zones.length - 1, // final zone
+        y = zonesShape[1]; // height of zone shape
+
+  // baseline = previous zone that % y == 0
+  let baseline;
+  for (let i = 0; i < y; i++) {
+    if (z - i % y == 0) {
+      baseline = z - i;
+      break;
+    }
+  }
+
+  let gimmeZone, gimmePos, gimmeVel;
+
+  if (data.pos.x <= 0) {
+    // choose leftward zone
+    gimmeZone = (z - y < 0) ? l - (y - z) + 1 : z - y;
+    gimmePos = {x: zoneShape[0] - 2, y: data.pos.y};
+    gimmeVel = {x: -1, y: 0};
+
+  } else if (data.pos.x >= zoneShape[0] - 2) {
+    // choose rightward zone
+    gimmeZone = (z + y > l) ? z - baseline : z + y;
+
+    gimmePos = {x: 1, y: data.pos.y};
+    gimmeVel = {x: 1, y: 0};
+
+  } else if (data.pos.y <= 0) {
+    // choose upwards zone
+    gimmeZone = (z - 1 < baseline) ? (baseline + (y - 1)) : (z - 1);
+    gimmePos = {x: data.pos.x, y: zoneShape[1] - 2};
+    gimmeVel = {x: 0, y: -1};
+
+  } else if (data.pos.y >= zoneShape[1] - 2) {
+    // choose downwards zone
+    gimmeZone = (z + 1 > baseline + (y - 1)) ? baseline : z + 1;
+    gimmePos = {x: data.pos.x, y: 1};
+    gimmeVel = {x: 0, y: 1};
+  }
+
+  return {
+    zoneIndex: gimmeZone,
+    pos: gimmePos,
+    vel: gimmeVel
+  };
+
 }

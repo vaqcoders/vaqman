@@ -33,7 +33,6 @@ class Pacman {
 
   eat() {
     this.points++;
-    console.log(this.points);
   }
 
   bonk() {
@@ -41,7 +40,6 @@ class Pacman {
     this.pos.y = this.ppos.y;
     //this.vel.x = this.pvel.x;
     //this.vel.y = this.pvel.y;
-    console.log("bonk");
   }
 
 }
