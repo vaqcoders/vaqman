@@ -1,16 +1,15 @@
 class Pacman {
 
   constructor(config) {
-    this.id = config.id;
+    this.discriminator = config.discriminator;
+    this.name = config.name || config.discriminator;
     this.pos = config.pos;
     this.ppos = {x: config.pos.x, y: config.pos.y};
     this.points = 0;
-    this.active = {
-      timestamp: 0,
-      isActive: false
-    };
+    this.active = {timestamp: 0, isActive: false};
     this.vel = {x: 0, y: 0};
     this.pvel = {x: 0, y: 0};
+    this.zone = config.zone;
   }
 
   update(vel) {
@@ -25,18 +24,23 @@ class Pacman {
     }
   }
 
-  render(xscl, yscl, xoff, yoff) {
+  render(xscl, yscl, xoff = 0, yoff = 0) {
     const midoffx = xscl * 0.5,
           midoffy = yscl * 0.5;
     fill(255, 255, 0);
     ellipse(this.pos.x * xscl + midoffx, this.pos.y * yscl + midoffy, xscl);
   }
 
+  eat() {
+    this.points++;
+    console.log(this.points);
+  }
+
   bonk() {
     this.pos.x = this.ppos.x;
     this.pos.y = this.ppos.y;
-    this.vel.x = this.pvel.x;
-    this.vel.y = this.pvel.y;
+    //this.vel.x = this.pvel.x;
+    //this.vel.y = this.pvel.y;
     console.log("bonk");
   }
 
