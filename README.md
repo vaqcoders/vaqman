@@ -1,6 +1,10 @@
 # VaqMan
 Multiplayer PacMan game for all your friends and family.
 
+## Devotions
+* Devoted to Sandra Davidson for her 75th birthday
+* Devoted to the class of 2019 for their senior year
+
 ## Reference
 * [Coding Train Agar.io Tutorial](https://www.youtube.com/watch?v=ZjVyKXp9hec)
 * [Agar.io Tutorial Src](https://github.com/CodingTrain/website/tree/master/CodingChallenges/CC_032.2_agario_sockets)
