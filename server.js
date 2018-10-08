@@ -14,6 +14,7 @@ const io = require("socket.io")(server);
 let players = {};
 let topTen = [];
 let zones = [];
+let playersByZone = {};
 const zoneShape = [28, 29];
 const zonesShape = [6, 6];
 
@@ -25,26 +26,49 @@ io.sockets.on("connection", socket => {
   console.log("We have a new client: " + socket.id);
 
   socket.on("start", data => {
-    players[data.discriminator] = data;
-    players[data.discriminator]["socket"] = socket.id;
+    players[socket.id] = data;
+    players[socket.id]["discriminator"] = socket.id;
+
+    if (playersByZone[data.zone]) playersByZone[data.zone].add(socket.id);
+    else playersByZone[data.zone] = new Set([socket.id]);
+
+    socket.emit("discriminator", socket.id);
+
+    playersByZone[data.zone].forEach(discriminator => {
+      if (socket.id == discriminator) return;
+      io.to(`${discriminator}`).emit("foe updated", {
+        x: data.pos.x,
+        y: data.pos.y,
+        name: players[discriminator].name,
+        discriminator: discriminator,
+        status: "here"
+      });
+    });
+
     console.log(`${data.name} has joined`);
     console.log(`current number of players: ${Object.values(players).length}`)
   });
 
   socket.on("score updated", data => {
-    console.log(`${data.name} has a score of ${data.points}`);
+    // console.log(`${data.name} has a score of ${data.points}`);
     players[data.discriminator].points = data.points;
-    topTen = createLeaderboard();
-    io.emit("leaderboard updated", {
-      players: Object.values(players).length,
-      topTen: topTen
-    });
   });
 
   socket.on("position updated", data => {
-    console.log(`${data.name} has a score of ${data.points}`);
-    players[data.discriminator].pos.x = data.pos.x;
-    players[data.discriminator].pos.y = data.pos.y;
+    players[data.discriminator].pos.x = data.x;
+    players[data.discriminator].pos.y = data.y;
+    if (playersByZone[data.z]) {
+      playersByZone[data.z].forEach(discriminator => {
+        if (socket.id == discriminator) return;
+        io.to(`${discriminator}`).emit("foe updated", {
+          x: data.x,
+          y: data.y,
+          name: players[discriminator].name,
+          discriminator: discriminator,
+          status: "here"
+        });
+      });
+    }
   });
 
   socket.on("eaten", data => {
@@ -60,13 +84,43 @@ io.sockets.on("connection", socket => {
   socket.on("zone changed", data => {
     const response = findNextZone(data);
     console.log(`${data.name} from ${data.zone} to ${response.zoneIndex}`);
-    io.emit("zone changed", {
+
+    playersByZone[data.zone].delete(data.discriminator);
+    if (playersByZone[response.zoneIndex]) playersByZone[response.zoneIndex].add(data.discriminator);
+    else playersByZone[response.zoneIndex] = new Set([data.discriminator]);
+
+    // console.log(JSON.stringify(playersByZone));
+
+    let gimmeFoes = {};
+    if (playersByZone[data.z]) {
+
+      gimmeFoe = playersByZone[response.zoneIndex]
+        .values()
+        .map(discriminator => players[discriminator])
+        .reduce((acc, cur) => acc[cur.discriminator] = cur, {});
+
+      playersByZone[data.z].forEach(discriminator => {
+        if (socket.id == discriminator) return;
+        io.to(`${discriminator}`).emit("foe updated", {
+          x: data.x,
+          y: data.y,
+          name: players[discriminator].name,
+          discriminator: discriminator,
+          status: "warping"
+        });
+      });
+
+    }
+
+    socket.emit("zone changed", {
       discriminator: data.discriminator,
+      foes: gimmeFoes,
       zone: zones[response.zoneIndex],
       zoneIndex: response.zoneIndex,
       pos: response.pos,
       vel: response.vel
     });
+
   });
 
   socket.on("exit", data => {
@@ -75,11 +129,25 @@ io.sockets.on("connection", socket => {
   });
 
   socket.on("disconnect", data => {
-    console.log(`${data.name} has left.`);
-    delete players[data.discriminator];
+    console.log(`${players[socket.id].name} has left.`);
+    const affectedZone = players[socket.id].zone;
+    playersByZone[affectedZone].delete(socket.id);
+    playersByZone[affectedZone].forEach(discriminator => {
+      io.to(`${discriminator}`).emit("foe updated", {status: "warping"});
+    });
+    delete players[socket.id];
   });
 
 });
+
+// INTERVALS
+setInterval(() => {
+  topTen = createLeaderboard();
+  io.emit("leaderboard updated", {
+    players: Object.values(players).length,
+    topTen: topTen
+  });
+}, 5 * 1000); // update leaderboard every 5 seconds
 
 // HELPER FUNCTIONS
 function createLeaderboard() {
@@ -92,7 +160,10 @@ function injectPacmaze(zone, sym, x, y) {
   const temp = zones[zone][y];
   const gimme = temp.slice(0, x) + sym + temp.slice(x + 1);
   zones[zone][y] = gimme;
-  io.emit("maze updated", {zone, sym, x, y});
+  playersByZone[zone].forEach(discriminator => {
+    io.to(`${discriminator}`)
+      .emit("maze updated", {zone, sym, x, y});
+  });
 }
 
 function findBlankZone() {
@@ -107,7 +178,6 @@ function findNextZone(data) {
         l = zones.length - 1, // final zone
         y = zonesShape[1]; // height of zone shape
 
-  // baseline = previous zone that % y == 0
   let baseline;
   for (let i = 0; i < y; i++) {
     if (z - i % y == 0) {
@@ -126,8 +196,7 @@ function findNextZone(data) {
 
   } else if (data.pos.x >= zoneShape[0] - 2) {
     // choose rightward zone
-    gimmeZone = (z + y > l) ? z - baseline : z + y;
-
+    gimmeZone = (z + y > l) ? (z - baseline || 0) : z + y;
     gimmePos = {x: 1, y: data.pos.y};
     gimmeVel = {x: 1, y: 0};
 

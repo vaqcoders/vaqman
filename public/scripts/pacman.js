@@ -31,6 +31,13 @@ class Pacman {
     ellipse(this.pos.x * xscl + midoffx, this.pos.y * yscl + midoffy, xscl);
   }
 
+  static render(x, y, xscl, yscl, xoff = 0, yoff = 0) {
+    const midoffx = xscl * 0.5,
+          midoffy = yscl * 0.5;
+    fill(255, 255, 0);
+    ellipse(x * xscl + midoffx, y * yscl + midoffy, xscl);
+  }
+
   eat() {
     this.points++;
   }
