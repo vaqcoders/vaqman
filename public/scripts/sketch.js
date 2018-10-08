@@ -1,8 +1,10 @@
 const socket = io.connect(window.href);
 const zoneShape = [28, 29];
 let player, cnv;
+let playerLoaded = false;
 let changingZones = false;
 let leaderboard;
+let foes = {};
 let pacmaze = ["###### ############## ######","#....# #.....##.....# #....#","#.#### #####.##.##### ####.#","#@#### #####.##.##### ####@#","#.#### #####.##.##### ####.#","#..........................#","#.####.##.########.##.####.#","#.####.##.########.##.####.#","#......##....##....##......#","######.##### ## #####.######","     #.##### ## #####.#     ","     #.##    ##    ##.#     ","######.## ######## ##.######","      .   #      #   .      ","######.## #      # ##.######","     #.## #      # ##.#     ","     #.## ######## ##.#     ","     #.##          ##.#     ","     #.## ######## ##.#     ","######.## ######## ##.######","#......##....##....##......#","#.####.##.########.##.####.#","#.####.##.########.##.####.#","#..........................#","#.#### #####.##.##### ####.#","#@#### #####.##.##### ####@#","#.#### #####.##.##### ####.#","#....# #.....##.....# #....#","###### ############## ######"];
 
 function setup() {
@@ -27,18 +29,25 @@ function setup() {
 }
 
 function draw() {
-  if (player && !changingZones) {
+
+  if (player && playerLoaded && !changingZones) {
     if (frameCount % 6 == 0) {
 
       if (player.pos.x <= 0 || player.pos.x >= zoneShape[0] - 1 || player.pos.y <= 0 || player.pos.y >= zoneShape[1] - 1) {
 
         socket.emit("zone changed", player);
+        socket.emit("position updated", {
+          discriminator: player.discriminator,
+          warping: true
+        });
         changingZones = true;
 
       } else {
 
         background(0);
         renderPacmaze();
+
+        renderFoes();
 
         player.render(width * 0.03571, height * 0.03448);
         player.update();
@@ -50,10 +59,20 @@ function draw() {
           player.eat();
         }
 
+        if (player.pos.x != player.ppos.x || player.pos.y != player.ppos.y) {
+          socket.emit("position updated", {
+            discriminator: player.discriminator,
+            x: player.pos.x,
+            y: player.pos.y,
+            z: player.zone
+          });
+        }
+
         controls();
       }
     }
   }
+
 }
 
 function windowResized() {
@@ -61,6 +80,27 @@ function windowResized() {
 }
 
 // SOCKET EVENTS
+socket.on("discriminator", data => {
+  player["discriminator"] = data;
+  playerLoaded = true;
+});
+
+socket.on("foe updated", data => {
+  if (data.status == "warping") delete foes[data.discriminator];
+  else if (data.status == "here") {
+    if (foes[data.discriminator])
+      foes[data.discriminator].pos = {x: data.x, y: data.y};
+    else {
+      foes[data.discriminator] = {
+        pos: {x: data.x, y: data.y},
+        name: data.name,
+        discriminator: data.discriminator
+      };
+    }
+  }
+  // console.log(foes);
+});
+
 socket.on("maze updated", data => {
   try {
     if (player.zone == data.zone)
@@ -71,6 +111,7 @@ socket.on("maze updated", data => {
 });
 
 socket.on("leaderboard updated", data => {
+  //console.log(data);
   //leaderboard.update(data);
 });
 
@@ -78,12 +119,13 @@ socket.on("zone changed", data => {
   if (player.discriminator == data.discriminator) {
     console.log(`currently in zone #${data.zoneIndex}`);
     pacmaze = data.zone;
+    foes = data.foes;
     player.zone = data.zoneIndex;
     player.pos.x = player.ppos.x = data.pos.x;
     player.pos.y = player.ppos.y = data.pos.y;
     changingZones = false;
   }
-})
+});
 
 // HELPER FUNCTIONS
 function renderPacmaze() {
@@ -100,6 +142,15 @@ function renderPacmaze() {
       ellipse(j * w + (w * 0.5), i * h + (h * 0.5), w, h);
     }
   }));
+}
+
+function renderFoes() {
+  Object.values(foes).forEach(foe => {
+    Pacman.render(
+      foe.pos.x, foe.pos.y,
+      width * 0.03571, height * 0.03448
+    );
+  });
 }
 
 function injectPacmaze(sym, x, y, emit = true) {
