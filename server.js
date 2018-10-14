@@ -39,14 +39,14 @@ io.sockets.on("connection", socket => {
       io.to(`${discriminator}`).emit("foe updated", {
         x: data.pos.x,
         y: data.pos.y,
-        name: players[discriminator].name,
-        discriminator: discriminator,
+        name: players[socket.id].name,
+        discriminator: socket.id,
         status: "here"
       });
     });
 
     console.log(`${data.name} has joined`);
-    console.log(`current number of players: ${Object.values(players).length}`)
+    console.log(`current number of players: ${Object.keys(players).length}`);
   });
 
   socket.on("score updated", data => {
@@ -63,8 +63,8 @@ io.sockets.on("connection", socket => {
         io.to(`${discriminator}`).emit("foe updated", {
           x: data.x,
           y: data.y,
-          name: players[discriminator].name,
-          discriminator: discriminator,
+          name: players[data.discriminator].name,
+          discriminator: data.discriminator,
           status: "here"
         });
       });
@@ -79,6 +79,29 @@ io.sockets.on("connection", socket => {
     injectPacmaze(data.zone, data.sym, data.x, data.y);
     if (data.sym == " ")
       setTimeout(() => injectPacmaze(data.zone, ".", data.x, data.y), 10 * 1000);
+    else if (data.sym == "!") {
+      players[socket.id].active = true;
+      playersByZone[data.zone].forEach(discriminator => {
+        if (socket.id == discriminator || !discriminator) return;
+        io.to(`${discriminator}`).emit("foe updated", {
+          name: players[data.discriminator].name,
+          discriminator: data.discriminator,
+          status: "activated"
+        });
+      });
+      setTimeout(() => {
+        socket.emit("deactivate", {active: false});
+        playersByZone[data.zone].forEach(discriminator => {
+          if (socket.id == discriminator) return;
+          io.to(`${discriminator}`).emit("foe updated", {
+            name: players[data.discriminator].name,
+            discriminator: data.discriminator,
+            status: "deactivated"
+          });
+        });
+      }, 5 * 1000);
+      setTimeout(() => injectPacmaze(data.zone, "@", data.x, data.y), 25 * 1000);
+    }
   });
 
   socket.on("zone changed", data => {
@@ -104,8 +127,8 @@ io.sockets.on("connection", socket => {
         io.to(`${discriminator}`).emit("foe updated", {
           x: data.x,
           y: data.y,
-          name: players[discriminator].name,
-          discriminator: discriminator,
+          name: players[data.discriminator].name,
+          discriminator: data.discriminator,
           status: "warping"
         });
       });
@@ -123,12 +146,8 @@ io.sockets.on("connection", socket => {
 
   });
 
-  socket.on("exit", data => {
-    console.log(`${data.name} has left.`);
-    delete players[data.discriminator];
-  });
-
   socket.on("disconnect", data => {
+    if (!players[socket.id]) return;
     console.log(`${players[socket.id].name} has left.`);
     const affectedZone = players[socket.id].zone;
     playersByZone[affectedZone].delete(socket.id);
@@ -144,7 +163,7 @@ io.sockets.on("connection", socket => {
 setInterval(() => {
   topTen = createLeaderboard();
   io.emit("leaderboard updated", {
-    players: Object.values(players).length,
+    players: Object.keys(players).length,
     topTen: topTen
   });
 }, 5 * 1000); // update leaderboard every 5 seconds

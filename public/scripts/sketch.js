@@ -16,12 +16,12 @@ function setup() {
   Ply.dialog("prompt", {
     title: "Choose a Screen Name",
     form: {name: "Ethan, Jason, etc..."}
-  }).done(ui => {
+  }).always(ui => {
     player = new Pacman({
-      name: ui.data.name,
+      name: ui.data.name || "guest",
       discriminator: Math.floor(Math.random() * 9000 + 1000),
       pos: {x: 14, y: 17},
-      zone: 0
+      zone: 0 // Math.floor(Math.random() * 36)
     });
     socket.emit("start", player);
     setInterval(() => socket.emit("score updated", player), 10 * 1000);
@@ -52,11 +52,14 @@ function draw() {
         player.render(width * 0.03571, height * 0.03448);
         player.update();
 
-        if (pacmaze[player.pos.y][player.pos.x] == "#") player.bonk();
-        else if (pacmaze[player.pos.y][player.pos.x] == ".") {
+        const sym = pacmaze[player.pos.y][player.pos.x];
+        if (sym == "#") player.bonk();
+        else if (sym == ".") {
           injectPacmaze(" ", player.pos.x, player.pos.y);
-          const tempx = player.pos.x * 1, tempy = player.pos.y * 1;
           player.eat();
+        } else if (sym == "@") {
+          injectPacmaze("!", player.pos.x, player.pos.y);
+          player.activate();
         }
 
         if (player.pos.x != player.ppos.x || player.pos.y != player.ppos.y) {
@@ -86,15 +89,18 @@ socket.on("discriminator", data => {
 });
 
 socket.on("foe updated", data => {
-  if (data.status == "warping") delete foes[data.discriminator];
-  else if (data.status == "here") {
-    if (foes[data.discriminator])
-      foes[data.discriminator].pos = {x: data.x, y: data.y};
+  const {status, name, discriminator, x, y} = data;
+  if (status == "warping") delete foes[discriminator];
+  else if (status == "activated") foes[discriminator].active = true;
+  else if (status == "deactivated") foes[discriminator].active = false;
+  else if (status == "here") {
+    if (foes[discriminator])
+      foes[discriminator].pos = {x, y};
     else {
-      foes[data.discriminator] = {
-        pos: {x: data.x, y: data.y},
-        name: data.name,
-        discriminator: data.discriminator
+      foes[discriminator] = {
+        pos: {x, y},
+        name: name,
+        discriminator: discriminator
       };
     }
   }
@@ -109,6 +115,8 @@ socket.on("maze updated", data => {
     console.error("Maze cannot be updated while warping between zones.")
   }
 });
+
+socket.on("deactivate", data => player.deactivate());
 
 socket.on("leaderboard updated", data => {
   //console.log(data);
@@ -146,10 +154,7 @@ function renderPacmaze() {
 
 function renderFoes() {
   Object.values(foes).forEach(foe => {
-    Pacman.render(
-      foe.pos.x, foe.pos.y,
-      width * 0.03571, height * 0.03448
-    );
+    Pacman.render(foe, width * 0.03571, height * 0.03448);
   });
 }
 
@@ -157,7 +162,13 @@ function injectPacmaze(sym, x, y, emit = true) {
   const temp = pacmaze[y];
   const gimme = temp.slice(0, x) + sym + temp.slice(x + 1);
   pacmaze[y] = gimme;
-  if (emit) socket.emit("maze updated", {zone: player.zone, sym: sym, x: x, y: y});
+  if (emit) socket.emit("maze updated", {
+    zone: player.zone,
+    discriminator: player.discriminator,
+    sym: sym,
+    x: x,
+    y: y
+  });
 }
 
 function transposePacmaze() {

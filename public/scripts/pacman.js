@@ -6,7 +6,7 @@ class Pacman {
     this.pos = config.pos;
     this.ppos = {x: config.pos.x, y: config.pos.y};
     this.points = 0;
-    this.active = {timestamp: 0, isActive: false};
+    this.active = false;
     this.vel = {x: 0, y: 0};
     this.pvel = {x: 0, y: 0};
     this.zone = config.zone;
@@ -27,19 +27,45 @@ class Pacman {
   render(xscl, yscl, xoff = 0, yoff = 0) {
     const midoffx = xscl * 0.5,
           midoffy = yscl * 0.5;
+    const x = this.pos.x * xscl + midoffx,
+          y = this.pos.y * yscl + midoffy;
+    if (!this.active) fill(255, 255, 0);
+    else fill(255, 100, 0);
+    ellipse(x, y, xscl);
+
     fill(255, 255, 0);
-    ellipse(this.pos.x * xscl + midoffx, this.pos.y * yscl + midoffy, xscl);
+    textAlign(CENTER);
+    fill(255, 0, 0);
+    text(this.name, x, y);
   }
 
-  static render(x, y, xscl, yscl, xoff = 0, yoff = 0) {
+  static render(foe, xscl, yscl, xoff = 0, yoff = 0) {
     const midoffx = xscl * 0.5,
           midoffy = yscl * 0.5;
+    const x = foe.pos.x * xscl + midoffx,
+          y = foe.pos.y * yscl + midoffy;
+    if (!foe.active) fill(255, 255, 0);
+    else fill(255, 100, 0);
+    ellipse(x, y, xscl);
+
     fill(255, 255, 0);
-    ellipse(x * xscl + midoffx, y * yscl + midoffy, xscl);
+    textAlign(CENTER);
+    fill(255, 0, 0);
+    text(foe.name, x, y);
   }
 
   eat() {
     this.points++;
+  }
+
+  activate() {
+    this.active = true;
+    console.log(`${this.name} has been activated!!!`);
+  }
+
+  deactivate() {
+    this.active = false;
+    console.log(`${this.name} has been deactivated...`);
   }
 
   bonk() {
