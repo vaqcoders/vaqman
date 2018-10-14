@@ -7,6 +7,11 @@ let leaderboard;
 let foes = {};
 let pacmaze = ["###### ############## ######","#....# #.....##.....# #....#","#.#### #####.##.##### ####.#","#@#### #####.##.##### ####@#","#.#### #####.##.##### ####.#","#..........................#","#.####.##.########.##.####.#","#.####.##.########.##.####.#","#......##....##....##......#","######.##### ## #####.######","     #.##### ## #####.#     ","     #.##    ##    ##.#     ","######.## ######## ##.######","      .   #      #   .      ","######.## #      # ##.######","     #.## #      # ##.#     ","     #.## ######## ##.#     ","     #.##          ##.#     ","     #.## ######## ##.#     ","######.## ######## ##.######","#......##....##....##......#","#.####.##.########.##.####.#","#.####.##.########.##.####.#","#..........................#","#.#### #####.##.##### ####.#","#@#### #####.##.##### ####@#","#.#### #####.##.##### ####.#","#....# #.....##.....# #....#","###### ############## ######"];
 
+const S = new Stats();
+S.dom.style.top = S.dom.style.left = "";
+S.dom.style.bottom = S.dom.style.right = "0";
+document.body.appendChild(S.dom);
+
 function setup() {
   cnv = createCanvas(window.innerHeight * 0.95, window.innerHeight * 0.95);
   cnv.parent("canvas-container");
@@ -56,6 +61,7 @@ function draw() {
         if (sym == "#") player.bonk();
         else if (sym == ".") {
           injectPacmaze(" ", player.pos.x, player.pos.y);
+          renderScore();
           player.eat();
         } else if (sym == "@") {
           injectPacmaze("!", player.pos.x, player.pos.y);
@@ -76,6 +82,7 @@ function draw() {
     }
   }
 
+  S.update();
 }
 
 function windowResized() {
@@ -156,6 +163,10 @@ function renderFoes() {
   Object.values(foes).forEach(foe => {
     Pacman.render(foe, width * 0.03571, height * 0.03448);
   });
+}
+
+function renderScore() {
+  document.getElementById("score-container").textContent = player.points;
 }
 
 function injectPacmaze(sym, x, y, emit = true) {
