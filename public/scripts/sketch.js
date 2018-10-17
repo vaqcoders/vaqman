@@ -97,7 +97,8 @@ socket.on("discriminator", data => {
 
 socket.on("foe updated", data => {
   const {status, name, discriminator, x, y} = data;
-  if (status == "warping") delete foes[discriminator];
+  console.log(discriminator);
+  if (status == "warping"){ delete foes[discriminator]; console.log("deleted foe");}
   else if (status == "activated") foes[discriminator].active = true;
   else if (status == "deactivated") foes[discriminator].active = false;
   else if (status == "here") {
@@ -167,6 +168,7 @@ function renderFoes() {
 
 function renderScore() {
   document.getElementById("score-container").textContent = player.points;
+  document.getElementById("zone-container").textContent = `Zone: ${player.zone}`;
 }
 
 function injectPacmaze(sym, x, y, emit = true) {

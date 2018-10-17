@@ -25,6 +25,7 @@ io.sockets.on("connection", socket => {
 
   console.log("We have a new client: " + socket.id);
 
+  // ON START
   socket.on("start", data => {
     players[socket.id] = data;
     players[socket.id]["discriminator"] = socket.id;
@@ -49,11 +50,13 @@ io.sockets.on("connection", socket => {
     console.log(`current number of players: ${Object.keys(players).length}`);
   });
 
+  // ON SCORE UPDATED
   socket.on("score updated", data => {
     // console.log(`${data.name} has a score of ${data.points}`);
     players[data.discriminator].points = data.points;
   });
 
+  // ON POSITION UPDATED
   socket.on("position updated", data => {
     players[data.discriminator].pos.x = data.x;
     players[data.discriminator].pos.y = data.y;
@@ -75,6 +78,7 @@ io.sockets.on("connection", socket => {
     // self-destruct
   });
 
+  // ON MAZE UPDATED
   socket.on("maze updated", data => {
     injectPacmaze(data.zone, data.sym, data.x, data.y);
     if (data.sym == " ")
@@ -104,6 +108,7 @@ io.sockets.on("connection", socket => {
     }
   });
 
+  // ON ZONE CHANGED
   socket.on("zone changed", data => {
     const response = findNextZone(data);
     console.log(`${data.name} from ${data.zone} to ${response.zoneIndex}`);
@@ -113,9 +118,8 @@ io.sockets.on("connection", socket => {
     else playersByZone[response.zoneIndex] = new Set([data.discriminator]);
 
     // console.log(JSON.stringify(playersByZone));
-
     let gimmeFoes = {};
-    if (playersByZone[data.z]) {
+    if (playersByZone[response.zoneIndex]) {
 
       gimmeFoe = playersByZone[response.zoneIndex]
         .values()
@@ -146,13 +150,14 @@ io.sockets.on("connection", socket => {
 
   });
 
+  // ON DISCONNECT
   socket.on("disconnect", data => {
     if (!players[socket.id]) return;
     console.log(`${players[socket.id].name} has left.`);
     const affectedZone = players[socket.id].zone;
     playersByZone[affectedZone].delete(socket.id);
     playersByZone[affectedZone].forEach(discriminator => {
-      io.to(`${discriminator}`).emit("foe updated", {status: "warping"});
+      io.to(`${discriminator}`).emit("foe updated", {status: "warping", discriminator: discriminator});
     });
     delete players[socket.id];
   });
