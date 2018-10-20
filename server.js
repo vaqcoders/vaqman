@@ -52,7 +52,6 @@ io.sockets.on("connection", socket => {
 
   // ON SCORE UPDATED
   socket.on("score updated", data => {
-    // console.log(`${data.name} has a score of ${data.points}`);
     players[data.discriminator].points = data.points;
   });
 
@@ -95,6 +94,7 @@ io.sockets.on("connection", socket => {
       });
       setTimeout(() => {
         socket.emit("deactivate", {active: false});
+        players[socket.id].active = false;
         playersByZone[data.zone].forEach(discriminator => {
           if (socket.id == discriminator) return;
           io.to(`${discriminator}`).emit("foe updated", {
@@ -117,23 +117,23 @@ io.sockets.on("connection", socket => {
     if (playersByZone[response.zoneIndex]) playersByZone[response.zoneIndex].add(data.discriminator);
     else playersByZone[response.zoneIndex] = new Set([data.discriminator]);
 
-    // console.log(JSON.stringify(playersByZone));
     let gimmeFoes = {};
     if (playersByZone[response.zoneIndex]) {
 
-      gimmeFoe = playersByZone[response.zoneIndex]
-        .values()
+      gimmeFoes = [...playersByZone[response.zoneIndex]]
+        .filter(discriminator => discriminator != socket.id)
         .map(discriminator => players[discriminator])
-        .reduce((acc, cur) => acc[cur.discriminator] = cur, {});
+        .reduce((acc, cur) => {
+          acc[cur.discriminator] = cur;
+          return acc;
+        }, {});
 
-      playersByZone[data.z].forEach(discriminator => {
+      playersByZone[data.zone].forEach(discriminator => {
         if (socket.id == discriminator) return;
         io.to(`${discriminator}`).emit("foe updated", {
-          x: data.x,
-          y: data.y,
+          status: "warping",
           name: players[data.discriminator].name,
-          discriminator: data.discriminator,
-          status: "warping"
+          discriminator: data.discriminator
         });
       });
 
@@ -204,7 +204,7 @@ function findNextZone(data) {
 
   let baseline;
   for (let i = 0; i < y; i++) {
-    if (z - i % y == 0) {
+    if ((z - i) % y == 0) {
       baseline = z - i;
       break;
     }

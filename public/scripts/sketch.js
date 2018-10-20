@@ -97,8 +97,7 @@ socket.on("discriminator", data => {
 
 socket.on("foe updated", data => {
   const {status, name, discriminator, x, y} = data;
-  console.log(discriminator);
-  if (status == "warping"){ delete foes[discriminator]; console.log("deleted foe");}
+  if (status == "warping") delete foes[discriminator];
   else if (status == "activated") foes[discriminator].active = true;
   else if (status == "deactivated") foes[discriminator].active = false;
   else if (status == "here") {
