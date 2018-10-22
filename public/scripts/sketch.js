@@ -68,6 +68,14 @@ function draw() {
           player.activate();
         }
 
+        // Check if collision with other players
+        if (!player.active) {
+          Object.values(foes).forEach(foe => {
+            if (foe.active && foe.pos.x == player.pos.x && foe.pos.y == player.pos.y)
+              window.location.href = window.location.href + " ";
+          });
+        }
+
         if (player.pos.x != player.ppos.x || player.pos.y != player.ppos.y) {
           socket.emit("position updated", {
             discriminator: player.discriminator,
@@ -90,8 +98,9 @@ function windowResized() {
 }
 
 // SOCKET EVENTS
-socket.on("discriminator", data => {
-  player["discriminator"] = data;
+socket.on("introduction", data => {
+  player.discriminator = data.discriminator;
+  pacmaze = data.zone;
   playerLoaded = true;
 });
 
@@ -144,7 +153,8 @@ socket.on("zone changed", data => {
 
 // HELPER FUNCTIONS
 function renderPacmaze() {
-  const w = width / zoneShape[0], h = height / zoneShape[1];
+  const w = width / zoneShape[0],
+        h = height / zoneShape[1];
   pacmaze.forEach((row, i) => row.split("").forEach((cell, j) => {
     if (cell == "#") {
       fill(0, 0, 255);

@@ -4,7 +4,7 @@
   "description": "VaqMan",
   "main": "server.js",
   "scripts": {
-    "test": "node server.js"
+    "start": "node server.js && start chrome http://127.0.0.1:8080/"
   },
   "repository": {
     "type": "git",

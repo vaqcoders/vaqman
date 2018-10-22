@@ -33,7 +33,10 @@ io.sockets.on("connection", socket => {
     if (playersByZone[data.zone]) playersByZone[data.zone].add(socket.id);
     else playersByZone[data.zone] = new Set([socket.id]);
 
-    socket.emit("discriminator", socket.id);
+    socket.emit("introduction", {
+      discriminator: socket.id,
+      zone: zones[data.zone]
+    });
 
     playersByZone[data.zone].forEach(discriminator => {
       if (socket.id == discriminator) return;
@@ -111,7 +114,7 @@ io.sockets.on("connection", socket => {
   // ON ZONE CHANGED
   socket.on("zone changed", data => {
     const response = findNextZone(data);
-    console.log(`${data.name} from ${data.zone} to ${response.zoneIndex}`);
+    // console.log(`${data.name} from ${data.zone} to ${response.zoneIndex}`);
 
     playersByZone[data.zone].delete(data.discriminator);
     if (playersByZone[response.zoneIndex]) playersByZone[response.zoneIndex].add(data.discriminator);
@@ -157,7 +160,10 @@ io.sockets.on("connection", socket => {
     const affectedZone = players[socket.id].zone;
     playersByZone[affectedZone].delete(socket.id);
     playersByZone[affectedZone].forEach(discriminator => {
-      io.to(`${discriminator}`).emit("foe updated", {status: "warping", discriminator: discriminator});
+      io.to(`${discriminator}`).emit("foe updated", {
+        status: "warping",
+        discriminator: socket.id
+      });
     });
     delete players[socket.id];
   });
