@@ -2,7 +2,6 @@
 Multiplayer PacMan game for all your friends and family.
 
 ## Devotions
-* Devoted to Sandra Davidson for her 75th birthday
 * Devoted to the class of 2019 for their senior year
 
 ## Reference
@@ -20,35 +19,12 @@ Multiplayer PacMan game for all your friends and family.
 6. Deploy on Heroku
 7. Sit back, relax, and play the best unblocked game of all time
 
-## Architecture
-* package.json
-* server.js
-* Procfile
-	* node server.js
-* node_modules/
-	* socket.io
-  * express
-* public/
-	* index.html
-	* scripts/
-		* pacman.js
-		* client.js
-		* main.js
-	* sounds/
-		* waka.wav
-		* eat.wav
-		* active.wav
-	* cgi-bin/
-		* pacman.png
-		* red.png
-		* blue.png
-		* pink.png
-		* blue.png
-		* scared.gif
-		* active.gif
-	* libraries/
-		* p5.js
-		* p5.sound.js
-		* p5.gif.js
-		* socket.js
-		* ply.js
+## Wanted Assets
+* sounds/
+	* waka.wav
+	* eat.wav
+	* active.wav
+* images/
+	* pacman.gif
+	* death.gif
+	* active.gif
