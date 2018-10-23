@@ -1,4 +1,4 @@
-const socket = io.connect(window.href);
+const socket = io.connect(window.href.location);
 const zoneShape = [28, 29];
 let player, cnv, pacmaze;
 let playerLoaded = false;
