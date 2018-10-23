@@ -10,7 +10,8 @@ Multiplayer PacMan game for all your friends and family.
 * [Project Architecture Example](https://github.com/vlw0052/Tutorial---ReactJS-and-Socket.io-Chat-App)
 	* [Correlating Video](https://www.youtube.com/watch?v=VFFr9PYgRGY)
 * [Socket - Get Started](https://socket.io/get-started/chat/)
-* [Emit Cheatsheet](https://socket.io/docs/emit-cheatsheet/]
+* [Emit Cheatsheet](https://socket.io/docs/emit-cheatsheet/)
+* [Notify.js Docs](https://notifyjs.jpillora.com/)
 
 ## Plan
 1. Make 1-player PacMan
