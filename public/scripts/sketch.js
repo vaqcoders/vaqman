@@ -10,7 +10,7 @@ let leaderboard = new Leaderboard("leaderboard-container");
 const S = new Stats();
 S.dom.style.top = S.dom.style.left = "";
 S.dom.style.bottom = S.dom.style.right = "0";
-document.body.appendChild(S.dom);
+$("body").append(S.dom);
 
 function setup() {
   cnv = createCanvas(window.innerHeight * 0.95, window.innerHeight * 0.95);
@@ -26,7 +26,7 @@ function setup() {
       pos: {x: 14, y: 17},
       zone: Math.floor(Math.random() * 36)
     });
-    document.getElementById("player-name").textContent = player.name;
+    $("#player-name").text(player.name);
     socket.emit("start", player);
     setInterval(() => socket.emit("score updated", player), 5 * 1000);
   });
@@ -189,7 +189,7 @@ function renderFoes() {
 }
 
 function renderScore() {
-  document.getElementById("score-container").textContent = player.points;
+  $("#score-container").text(player.points);
 }
 
 function renderMiniMap(x, y, w_ = height * 0.1, h_ = height * 0.1) {

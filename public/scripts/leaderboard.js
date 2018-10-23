@@ -2,54 +2,45 @@ class Leaderboard {
 
   constructor(parent) {
     this.el;
-    this.parent = document.getElementById(parent);
+    this.parent = $(`#${parent}`);
   }
 
   update(json) {
     this.createElement(json);
-    this.parent.innerHTML = "";
-    this.parent.appendChild(this.el);
+    this.parent.html("");
+    this.parent.append(this.el);
   }
 
   createElement(json) {
 
-    const div = document.createElement("div");
-    div.className = "leaderboard";
+    const div = $("<div></div>");
+    div.addClass("leaderboard");
 
-    const h1 = document.createElement("h1");
-    h1.textContent = "Top Players:";
+    const h1 = $("<h1></h1>").text("Top Players:");
 
-    const info = document.createElement("small");
-    info.textContent = `${json.players} in lobby`;
+    const info = $("<small></small>").text(`${json.players} in lobby`);
 
     const tb = json.topTen.reduce((acc, cur, i) => {
-      const tr = document.createElement("tr");
-      tr.className = "leaderboard-entry";
+      const tr = $("<tr></tr>");
+      tr.addClass("leaderboard-entry");
 
-      const td1 = document.createElement("td");
-      td1.className = "placement";
-      td1.textContent = i + 1;
+      const td1 = $("<td></td>").text(i + 1);
+      td1.addClass("placement");
 
-      const td2 = document.createElement("td");
-      td2.className = "name-on-leaderboard";
-      td2.textContent = cur.name;
+      const td2 = $("<td></td>").text(cur.name);
+      td2.addClass("name-on-leaderboard");
 
-      const td3 = document.createElement("td");
-      td3.className = "points-on-leaderboard";
-      td3.textContent = cur.points;
+      const td3 = $("<td></td>").text(cur.points);
+      td3.addClass("points-on-leaderboard");
 
-      tr.appendChild(td1);
-      tr.appendChild(td2);
-      tr.appendChild(td3);
+      tr.append(td1, td2, td3);
 
-      acc.appendChild(tr);
+      acc.append(tr);
       return acc;
 
-    }, document.createElement("table"));
+    }, $("<table></table>"));
 
-    div.appendChild(h1);
-    div.appendChild(info);
-    div.appendChild(tb);
+    div.append(h1, info, tb);
 
     this.el = div;
     return div;
