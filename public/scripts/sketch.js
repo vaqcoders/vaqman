@@ -1,4 +1,5 @@
 const socket = io.connect(window.location.href);
+
 const zoneShape = [28, 29];
 let player, cnv, pacmaze;
 let playerLoaded = false;
@@ -192,6 +193,8 @@ function renderScore() {
   $("#score-container").text(player.points);
 }
 
+const refresh = () => window.location.href = window.location.href;
+
 function renderMiniMap(x, y, w_ = height * 0.1, h_ = height * 0.1) {
   const zoneShape = [6, 6];
   const {zone} = player;
@@ -225,7 +228,7 @@ function injectPacmaze(sym, x, y, emit = true) {
 function selfDestruct(foe) {
   const {name, points} = player;
   socket.emit("eaten", {foe, name, points});
-  window.location.href = window.location.href + " ";
+  refresh();
 }
 
 function controls() {
