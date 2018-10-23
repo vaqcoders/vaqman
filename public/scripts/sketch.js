@@ -1,4 +1,5 @@
 const socket = io.connect(window.location.href);
+
 const zoneShape = [28, 29];
 let player, cnv, pacmaze;
 let playerLoaded = false;
@@ -10,7 +11,7 @@ let leaderboard = new Leaderboard("leaderboard-container");
 const S = new Stats();
 S.dom.style.top = S.dom.style.left = "";
 S.dom.style.bottom = S.dom.style.right = "0";
-document.body.appendChild(S.dom);
+$("body").append(S.dom);
 
 function setup() {
   cnv = createCanvas(window.innerHeight * 0.95, window.innerHeight * 0.95);
@@ -26,7 +27,7 @@ function setup() {
       pos: {x: 14, y: 17},
       zone: Math.floor(Math.random() * 36)
     });
-    document.getElementById("player-name").textContent = player.name;
+    $("#player-name").text(player.name);
     socket.emit("start", player);
     setInterval(() => socket.emit("score updated", player), 5 * 1000);
   });
@@ -160,8 +161,8 @@ socket.on("zone changed", data => {
 socket.on("eaten", data => {
   const {name, points} = data;
   player.points += points;
-  console.log(`Ate ${name}`);
-  // createPopup(`Ate ${name}`)
+  $.notify(`Ate ${name}`, "success");
+  renderScore();
 })
 
 // HELPER FUNCTIONS
@@ -189,8 +190,10 @@ function renderFoes() {
 }
 
 function renderScore() {
-  document.getElementById("score-container").textContent = player.points;
+  $("#score-container").text(player.points);
 }
+
+const refresh = () => window.location.href = window.location.href;
 
 function renderMiniMap(x, y, w_ = height * 0.1, h_ = height * 0.1) {
   const zoneShape = [6, 6];
@@ -225,7 +228,7 @@ function injectPacmaze(sym, x, y, emit = true) {
 function selfDestruct(foe) {
   const {name, points} = player;
   socket.emit("eaten", {foe, name, points});
-  window.location.href = window.location.href + " ";
+  refresh();
 }
 
 function controls() {
