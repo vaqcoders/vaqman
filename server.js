@@ -77,7 +77,9 @@ io.sockets.on("connection", socket => {
   });
 
   socket.on("eaten", data => {
-    // self-destruct
+    const {foe, name, points} = data;
+    io.to(`${foe}`)
+      .emit("eaten", {name, points});
   });
 
   // ON MAZE UPDATED
@@ -127,7 +129,7 @@ io.sockets.on("connection", socket => {
         .filter(discriminator => discriminator != socket.id)
         .map(discriminator => players[discriminator])
         .reduce((acc, cur) => {
-          acc[cur.discriminator] = cur;
+          if (cur) acc[cur.discriminator] = cur;
           return acc;
         }, {});
 

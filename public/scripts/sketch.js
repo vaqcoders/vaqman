@@ -72,7 +72,7 @@ function draw() {
         if (!player.active) {
           Object.values(foes).forEach(foe => {
             if (foe.active && foe.pos.x == player.pos.x && foe.pos.y == player.pos.y)
-              window.location.href = window.location.href + " ";
+              selfDestruct(foe.discriminator);
           });
         }
 
@@ -84,6 +84,13 @@ function draw() {
             z: player.zone
           });
         }
+
+        renderMiniMap(
+          width * 0.39281,
+          height * 0.44824,
+          width * 0.22,
+          height * 0.11
+        );
 
         controls();
       }
@@ -136,7 +143,7 @@ socket.on("deactivate", data => player.deactivate());
 
 socket.on("leaderboard updated", data => {
   //console.log(data);
-  //leaderboard.update(data);
+  // leaderboard.update(data);
 });
 
 socket.on("zone changed", data => {
@@ -151,10 +158,18 @@ socket.on("zone changed", data => {
   }
 });
 
+socket.on("eaten", data => {
+  const {name, points} = data;
+  player.points += points;
+  console.log(`Ate ${name}`);
+  // createPopup(`Ate ${name}`)
+})
+
 // HELPER FUNCTIONS
 function renderPacmaze() {
   const w = width / zoneShape[0],
         h = height / zoneShape[1];
+  stroke(0);
   pacmaze.forEach((row, i) => row.split("").forEach((cell, j) => {
     if (cell == "#") {
       fill(0, 0, 255);
@@ -170,14 +185,30 @@ function renderPacmaze() {
 }
 
 function renderFoes() {
-  Object.values(foes).forEach(foe => {
-    Pacman.render(foe, width * 0.03571, height * 0.03448);
-  });
+  Object.values(foes)
+    .forEach(foe => Pacman.render(foe, width * 0.03571, height * 0.03448));
 }
 
 function renderScore() {
   document.getElementById("score-container").textContent = player.points;
   document.getElementById("zone-container").textContent = `Zone: ${player.zone}`;
+}
+
+function renderMiniMap(x, y, w_ = height * 0.1, h_ = height * 0.1) {
+  const zoneShape = [6, 6];
+  const {zone} = player;
+  const w = Math.floor(w_ / zoneShape[0]);
+  const h = Math.floor(h_ / zoneShape[1]);
+  let counter = 0;
+  stroke(255);
+  for (let i = 0; i < zoneShape[0]; i++) {
+    for (let j = 0; j < zoneShape[1]; j++) {
+      fill(0, 0, 0, 0);
+      if (counter == zone) fill(255, 255, 0, 200);
+      rect(i * w + x, j * h + y, w, h);
+      counter++;
+    }
+  }
 }
 
 function injectPacmaze(sym, x, y, emit = true) {
@@ -193,14 +224,10 @@ function injectPacmaze(sym, x, y, emit = true) {
   });
 }
 
-function transposePacmaze() {
-  let gimmeMaze = [];
-  for (let x = 0; x < pacmaze[0].length; x++) {
-    let gimmeRow = "";
-    for (let y = 0; y < pacmaze.length; y++)
-      gimmeRow += pacmaze[y][x];
-    gimmeMaze.push(gimmeRow);
-  } return gimmeMaze;
+function selfDestruct(foe) {
+  const {name, points} = player;
+  socket.emit("eaten", {foe, name, points});
+  window.location.href = window.location.href + " ";
 }
 
 function controls() {

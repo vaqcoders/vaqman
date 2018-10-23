@@ -29,6 +29,7 @@ class Pacman {
           midoffy = yscl * 0.5;
     const x = this.pos.x * xscl + midoffx,
           y = this.pos.y * yscl + midoffy;
+    noStroke();
     if (!this.active) fill(255, 255, 0);
     else fill(255, 100, 0);
     ellipse(x, y, xscl);
