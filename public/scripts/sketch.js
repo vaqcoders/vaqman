@@ -160,8 +160,8 @@ socket.on("zone changed", data => {
 socket.on("eaten", data => {
   const {name, points} = data;
   player.points += points;
-  console.log(`Ate ${name}`);
-  // createPopup(`Ate ${name}`)
+  $.notify(`Ate ${name}`, "success");
+  renderScore();
 })
 
 // HELPER FUNCTIONS
