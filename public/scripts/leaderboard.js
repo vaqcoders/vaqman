@@ -17,27 +17,39 @@ class Leaderboard {
     div.className = "leaderboard";
 
     const h1 = document.createElement("h1");
-    h1.textContent = `Top Players (${json.players})`;
+    h1.textContent = "Top Players:";
 
-    const ol = json.topTen.reduce((acc, cur, i) => {
-      const li = document.createElement("li");
+    const info = document.createElement("small");
+    info.textContent = `${json.players} in lobby`;
 
-      const mark = document.createElement("mark");
-      mark.textContent = cur.name;
+    const tb = json.topTen.reduce((acc, cur, i) => {
+      const tr = document.createElement("tr");
+      tr.className = "leaderboard-entry";
 
-      const small = document.createElement("small");
-      small.textContent = cur.points;
+      const td1 = document.createElement("td");
+      td1.className = "placement";
+      td1.textContent = i + 1;
 
-      li.appendChild(mark);
-      li.appendChild(small);
-      
-      acc.appendChild(li);
+      const td2 = document.createElement("td");
+      td2.className = "name-on-leaderboard";
+      td2.textContent = cur.name;
+
+      const td3 = document.createElement("td");
+      td3.className = "points-on-leaderboard";
+      td3.textContent = cur.points;
+
+      tr.appendChild(td1);
+      tr.appendChild(td2);
+      tr.appendChild(td3);
+
+      acc.appendChild(tr);
       return acc;
 
-    }, document.createElement("ol"));
+    }, document.createElement("table"));
 
     div.appendChild(h1);
-    div.appendChild(ol);
+    div.appendChild(info);
+    div.appendChild(tb);
 
     this.el = div;
     return div;

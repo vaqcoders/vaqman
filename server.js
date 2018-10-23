@@ -76,6 +76,7 @@ io.sockets.on("connection", socket => {
     }
   });
 
+  // ON EATEN
   socket.on("eaten", data => {
     const {foe, name, points} = data;
     io.to(`${foe}`)
@@ -179,7 +180,7 @@ setInterval(() => {
     players: Object.keys(players).length,
     topTen: topTen
   });
-}, 5 * 1000); // update leaderboard every 5 seconds
+}, 2.5 * 1000); // update leaderboard every 5 seconds
 
 // HELPER FUNCTIONS
 function createLeaderboard() {

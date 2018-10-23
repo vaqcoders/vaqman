@@ -1,11 +1,11 @@
 const socket = io.connect(window.href);
 const zoneShape = [28, 29];
-let player, cnv;
+let player, cnv, pacmaze;
 let playerLoaded = false;
 let changingZones = false;
-let leaderboard;
 let foes = {};
-let pacmaze = ["###### ############## ######","#....# #.....##.....# #....#","#.#### #####.##.##### ####.#","#@#### #####.##.##### ####@#","#.#### #####.##.##### ####.#","#..........................#","#.####.##.########.##.####.#","#.####.##.########.##.####.#","#......##....##....##......#","######.##### ## #####.######","     #.##### ## #####.#     ","     #.##    ##    ##.#     ","######.## ######## ##.######","      .   #      #   .      ","######.## #      # ##.######","     #.## #      # ##.#     ","     #.## ######## ##.#     ","     #.##          ##.#     ","     #.## ######## ##.#     ","######.## ######## ##.######","#......##....##....##......#","#.####.##.########.##.####.#","#.####.##.########.##.####.#","#..........................#","#.#### #####.##.##### ####.#","#@#### #####.##.##### ####@#","#.#### #####.##.##### ####.#","#....# #.....##.....# #....#","###### ############## ######"];
+
+let leaderboard = new Leaderboard("leaderboard-container");
 
 const S = new Stats();
 S.dom.style.top = S.dom.style.left = "";
@@ -16,8 +16,6 @@ function setup() {
   cnv = createCanvas(window.innerHeight * 0.95, window.innerHeight * 0.95);
   cnv.parent("canvas-container");
 
-  leaderboard = new Leaderboard("leaderboard-container");
-
   Ply.dialog("prompt", {
     title: "Choose a Screen Name",
     form: {name: "Ethan, Jason, etc..."}
@@ -26,10 +24,11 @@ function setup() {
       name: ui.data.name || "guest",
       discriminator: Math.floor(Math.random() * 9000 + 1000),
       pos: {x: 14, y: 17},
-      zone: 0 // Math.floor(Math.random() * 36)
+      zone: Math.floor(Math.random() * 36)
     });
+    document.getElementById("player-name").textContent = player.name;
     socket.emit("start", player);
-    setInterval(() => socket.emit("score updated", player), 10 * 1000);
+    setInterval(() => socket.emit("score updated", player), 5 * 1000);
   });
 }
 
@@ -143,7 +142,7 @@ socket.on("deactivate", data => player.deactivate());
 
 socket.on("leaderboard updated", data => {
   //console.log(data);
-  // leaderboard.update(data);
+  leaderboard.update(data);
 });
 
 socket.on("zone changed", data => {
@@ -191,7 +190,6 @@ function renderFoes() {
 
 function renderScore() {
   document.getElementById("score-container").textContent = player.points;
-  document.getElementById("zone-container").textContent = `Zone: ${player.zone}`;
 }
 
 function renderMiniMap(x, y, w_ = height * 0.1, h_ = height * 0.1) {

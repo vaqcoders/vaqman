@@ -3,6 +3,14 @@ html, body {
   background-color: black;
 }
 
+.leaderboard {
+  color: white;
+}
+
+.leaderboard-entry {
+  border: 1px solid white;
+}
+
 #canvas-container {
   margin: 0;
   position: absolute;
@@ -11,9 +19,12 @@ html, body {
   transform: translate(-50%, -50%);
 }
 
-#score-container {
-  top: 0;
-  left: 0;
+#player-name {
   color: white;
-  font-size: 4em;
+  font-size: 2em;
+}
+
+#score-container {
+  color: white;
+  font-size: 2em;
 }
