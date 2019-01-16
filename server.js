@@ -3,7 +3,7 @@ const pacmaze_boilerplate = ["###### ############## ######","#....# #.....##....
 const express = require("express");
 const app = express();
 
-const server = app.listen(process.env.PORT || 8080, () => {
+const server = app.listen(process.env.PORT || 2080, () => {
   const {host, port} = server.address();
   console.log(`Listening at http://${host}:${port}`);
 });
@@ -118,7 +118,6 @@ io.sockets.on("connection", socket => {
   socket.on("zone changed", data => {
     const response = findNextZone(data);
     // console.log(`${data.name} from ${data.zone} to ${response.zoneIndex}`);
-
     playersByZone[data.zone].delete(data.discriminator);
     if (playersByZone[response.zoneIndex]) playersByZone[response.zoneIndex].add(data.discriminator);
     else playersByZone[response.zoneIndex] = new Set([data.discriminator]);
@@ -180,7 +179,7 @@ setInterval(() => {
     players: Object.keys(players).length,
     topTen: topTen
   });
-}, 2.5 * 1000); // update leaderboard every 5 seconds
+}, 2.5 * 1000); // update leaderboard every 2.5 seconds
 
 // HELPER FUNCTIONS
 function createLeaderboard() {

@@ -8,6 +8,7 @@ Multiplayer PacMan game for all your friends and family.
 * NodeJs
 * jQuery
 * SocketIO
+* Express
 
 ## Reference
 * [Agar.io Tutorial Src](https://github.com/CodingTrain/website/tree/master/CodingChallenges/CC_032.2_agario_sockets)
@@ -20,14 +21,14 @@ Multiplayer PacMan game for all your friends and family.
 * [Building using WebpackJS](https://webpack.js.org/guides/getting-started/)
 * [Sample Package.json using Webpack](https://github.com/szwacz/electron-boilerplate/blob/master/package.json)
 
-## Plan
+## Development Plan
 1. Make 1-player PacMan
-2. Sync player data with server
-3. Host two moving player in real time
-4. Update Pellet/Power Pellet statuses
-5. Update player score frequently with live leader board
-6. Deploy on Heroku
-7. Sit back, relax, and play the best unblocked game of all time
+1. Sync player data with server
+1. Host two moving player in real time
+1. Update Pellet/Power Pellet statuses
+1. Update player score frequently with live leader board
+1. Deploy
+1. Sit back, relax, and play the best unblocked game of all time
 
 ## Wanted Assets
 * sounds/
